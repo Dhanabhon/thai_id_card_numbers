@@ -1,15 +1,3 @@
-# thai_id_card_numbers
-
-A Flutter plugin for validating and formatting Thai ID card numbers as users type.
-
-## Usage
-
-To use this plugin, add `thai_id_card_numbers` as a [dependency in your pubspec.yaml file](https://flutter.dev/docs/development/platform-integration/platform-channels).
-
-### Examples
-
-<?code-excerpt "main.dart (example)"?>
-```dart
 import 'package:flutter/material.dart';
 
 import 'package:thai_id_card_numbers/thai_id_card_numbers.dart';
@@ -113,6 +101,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-```
-
-
