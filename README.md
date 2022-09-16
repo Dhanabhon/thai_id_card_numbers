@@ -1,5 +1,7 @@
 # thai_id_card_numbers
 
+[![pub package](https://img.shields.io/pub/v/thai_id_card_numbers)](https://pub.dev/packages/thai_id_card_numbers)
+
 A Flutter plugin for validating and formatting Thai ID card numbers as users type.
 
 ## Usage
