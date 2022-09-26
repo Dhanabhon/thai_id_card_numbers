@@ -117,4 +117,6 @@ class _MyAppState extends State<MyApp> {
 }
 ```
 
+## Inspiration
+This plugin is inspired by [thai-id-validator](https://www.npmjs.com/package/thai-id-validator).
 
