@@ -13,16 +13,20 @@ class ThaiIdCardNumbersFormatter extends TextInputFormatter {
   });
 
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.text.isNotEmpty) {
       if (newValue.text.length > oldValue.text.length) {
         if (newValue.text.length > pattern.length) {
           return oldValue;
         }
-        if (newValue.text.length < pattern.length && pattern[newValue.text.length - 1] == delimiter) {
+        if (newValue.text.length < pattern.length &&
+            pattern[newValue.text.length - 1] == delimiter) {
           return TextEditingValue(
-            text: '${oldValue.text}$delimiter${newValue.text.substring(newValue.text.length - 1)}',
-            selection: TextSelection.collapsed(offset: newValue.selection.end + 1),
+            text:
+                '${oldValue.text}$delimiter${newValue.text.substring(newValue.text.length - 1)}',
+            selection:
+                TextSelection.collapsed(offset: newValue.selection.end + 1),
           );
         }
       }

@@ -32,10 +32,19 @@ class _MyAppState extends State<MyApp> {
   final _thaiIdCardNumbers = ThaiIdCardNumbers();
   final _formKey = GlobalKey<FormState>();
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+  late TextEditingController _textEditingController;
 
   @override
   void initState() {
     super.initState();
+
+    _textEditingController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _textEditingController.dispose();
   }
 
   @override
@@ -57,11 +66,10 @@ class _MyAppState extends State<MyApp> {
               children: [
                 const Padding(
                     padding: EdgeInsets.all(20.0),
-                    child: Text('Enter your Thai ID card numbers')
-                ),
-
+                    child: Text('Enter your Thai ID card numbers')),
                 TextFormField(
-                  validator: (value) {
+                  controller: _textEditingController,
+                  validator: (String? value) {
                     String? newValue = value?.replaceAll(RegExp('-'), '');
                     if (!_thaiIdCardNumbers.validate(newValue!)) {
                       return "$value is not a valid Thai ID card numbers.";
@@ -69,24 +77,33 @@ class _MyAppState extends State<MyApp> {
                     return null;
                   },
                   inputFormatters: [
-                    ThaiIdCardNumbersFormatter(pattern: pattern, delimiter: separator),
+                    ThaiIdCardNumbersFormatter(
+                        pattern: pattern, delimiter: separator),
                   ],
                   decoration: const InputDecoration(
                       hintText: "1-2345-67891-01-2",
                       border: OutlineInputBorder(),
                       focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(width: 1, color: Colors.blueAccent)
-                      )
-                  ),
+                          borderSide:
+                          BorderSide(width: 1, color: Colors.blueAccent))),
                 ),
-
                 const SizedBox(height: 10.0),
-
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _messengerKey.currentState?.showMaterialBanner(
-                          MaterialBanner(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        _textEditingController.clear();
+                        _textEditingController.text = _thaiIdCardNumbers
+                            .format(_thaiIdCardNumbers.generate());
+                      },
+                      child: const Text("Generate"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _messengerKey.currentState
+                              ?.showMaterialBanner(MaterialBanner(
                             content: const Text(
                               "Congratulations, Your Thai ID card numbers is in valid format.",
                               style: TextStyle(
@@ -96,16 +113,17 @@ class _MyAppState extends State<MyApp> {
                             actions: [
                               TextButton(
                                   onPressed: () {
-                                    _messengerKey.currentState?.hideCurrentMaterialBanner();
+                                    _messengerKey.currentState
+                                        ?.hideCurrentMaterialBanner();
                                   },
-                                  child: const Text("DISMISS")
-                              ),
+                                  child: const Text("DISMISS")),
                             ],
-                          )
-                      );
-                    }
-                  },
-                  child: const Text("Validate"),
+                          ));
+                        }
+                      },
+                      child: const Text("Validate"),
+                    ),
+                  ],
                 ),
               ],
             ),

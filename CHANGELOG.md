@@ -1,3 +1,3 @@
-## 1.0.0
+## 1.2.0
 
-* Initial release
+* Add new features for Thai ID card number generating and formatting
