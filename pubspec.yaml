@@ -5,7 +5,7 @@ version: 1.2.1
 homepage: https://dhanabhon.com
 
 environment:
-  sdk: '>=2.18.1 <3.0.0'
+  sdk: '>=2.18.1 <4.0.0'
   flutter: ">=2.5.0"
 
 dependencies:
