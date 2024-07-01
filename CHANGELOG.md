@@ -1,3 +1,7 @@
+## 1.3.1
+
+* Fix bug where the version of package.
+
 ## 1.3.0
 
 * Supports Web platform
@@ -9,4 +13,4 @@
 
 ## 1.2.0
 
-* Add new features for Thai ID card number generating and formatting
+* Add new features for Thai ID card number generating and formatting.
