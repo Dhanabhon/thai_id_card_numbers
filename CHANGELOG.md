@@ -1,7 +1,3 @@
-## 1.3.1
-
-* Fix bug where the version of package.
-
 ## 1.3.0
 
 * Supports Web platform
