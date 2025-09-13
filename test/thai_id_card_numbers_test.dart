@@ -54,7 +54,8 @@ void main() {
   group('ThaiIdCardNumbersFormatter', () {
     const pattern = 'x-xxxx-xxxxx-xx-x';
     const delimiter = '-';
-    final formatter = ThaiIdCardNumbersFormatter(pattern: pattern, delimiter: delimiter);
+    final formatter =
+        ThaiIdCardNumbersFormatter(pattern: pattern, delimiter: delimiter);
 
     TextEditingValue tev(String text, [int? offset]) => TextEditingValue(
           text: text,

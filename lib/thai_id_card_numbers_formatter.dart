@@ -40,14 +40,14 @@ class ThaiIdCardNumbersFormatter extends TextInputFormatter {
     // Normalize to digits and re-apply pattern. This allows paste and filters noise.
     final raw = _digitsOnly(newValue.text);
     if (raw.isEmpty) {
-      return const TextEditingValue(text: '', selection: TextSelection.collapsed(offset: 0));
+      return const TextEditingValue(
+          text: '', selection: TextSelection.collapsed(offset: 0));
     }
 
     final formatted = _applyPattern(raw);
     // Prevent overflow beyond pattern length implicitly by truncation in _applyPattern.
-    final selectionIndex = formatted.length > pattern.length
-        ? pattern.length
-        : formatted.length;
+    final selectionIndex =
+        formatted.length > pattern.length ? pattern.length : formatted.length;
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: selectionIndex),

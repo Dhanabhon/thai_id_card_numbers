@@ -54,7 +54,8 @@ class _MyAppState extends State<MyApp> {
         ),
         actions: [
           TextButton(
-            onPressed: () => _messengerKey.currentState?.hideCurrentMaterialBanner(),
+            onPressed: () =>
+                _messengerKey.currentState?.hideCurrentMaterialBanner(),
             child: const Text('DISMISS'),
           ),
         ],
@@ -98,19 +99,21 @@ class _MyAppState extends State<MyApp> {
                     return ok ? null : 'Invalid Thai ID card number';
                   },
                   onChanged: (_) => setState(() {
-                        // trigger live validity indicator
-                        final raw = _digitsOnly(_controller.text);
-                        _isValid = _thaiId.validate(raw);
-                      }),
+                    // trigger live validity indicator
+                    final raw = _digitsOnly(_controller.text);
+                    _isValid = _thaiId.validate(raw);
+                  }),
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    ThaiIdCardNumbersFormatter(pattern: _pattern, delimiter: _delimiter),
+                    ThaiIdCardNumbersFormatter(
+                        pattern: _pattern, delimiter: _delimiter),
                   ],
                   decoration: const InputDecoration(
                     hintText: '1-2345-67890-12-1',
                     border: OutlineInputBorder(),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 1, color: Colors.blueAccent),
+                      borderSide:
+                          BorderSide(width: 1, color: Colors.blueAccent),
                     ),
                     counterText: '',
                   ),
@@ -147,9 +150,11 @@ class _MyAppState extends State<MyApp> {
                     ElevatedButton.icon(
                       onPressed: () {
                         if (_formKey.currentState?.validate() ?? false) {
-                          _showBanner('Valid Thai ID card number', color: Colors.green);
+                          _showBanner('Valid Thai ID card number',
+                              color: Colors.green);
                         } else {
-                          _showBanner('Invalid Thai ID card number', color: Colors.redAccent);
+                          _showBanner('Invalid Thai ID card number',
+                              color: Colors.redAccent);
                         }
                       },
                       icon: const Icon(Icons.verified),
