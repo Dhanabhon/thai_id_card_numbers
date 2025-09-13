@@ -2,139 +2,110 @@
 
 [![pub package](https://img.shields.io/pub/v/thai_id_card_numbers)](https://pub.dev/packages/thai_id_card_numbers)
 
-A Flutter plugin for validating and formatting Thai ID card numbers as users type.
+A Flutter/Dart package for validating and formatting Thai ID card numbers, including a TextInputFormatter for live masking as users type.
 
-## Usage
+## Install
 
-To use this plugin, add `thai_id_card_numbers` as a [dependency in your pubspec.yaml file](https://flutter.dev/docs/development/platform-integration/platform-channels).
+Add the dependency in `pubspec.yaml` and fetch packages:
 
-### Examples
+```yaml
+dependencies:
+  thai_id_card_numbers: ^1.4.0
+```
 
-<?code-excerpt "main.dart (example)"?>
+```
+flutter pub get
+```
+
+## Quick start
+
+Validate, format, and generate IDs in Dart code:
+
 ```dart
-import 'package:flutter/material.dart';
-
 import 'package:thai_id_card_numbers/thai_id_card_numbers.dart';
+
+final id = ThaiIdCardNumbers();
+
+id.validate('1234567890121'); // true if checksum matches
+id.format('1234567890121');   // => "1-2345-67890-12-1"
+final generated = id.generate(); // valid 13-digit ID
+
+// Helpers
+id.validateFormatted('1-2345-67890-12-1'); // true (accepts delimiters)
+id.normalize('1-2345-67890-12-1'); // => "1234567890121"
+id.checksum('123456789012'); // => 1
+```
+
+Use the input formatter in a Flutter `TextFormField`:
+
+```dart
 import 'package:thai_id_card_numbers/thai_id_card_numbers_formatter.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+const pattern = 'x-xxxx-xxxxx-xx-x';
+const delimiter = '-';
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+TextFormField(
+  keyboardType: TextInputType.number,
+  inputFormatters: [
+    FilteringTextInputFormatter.digitsOnly,
+    ThaiIdCardNumbersFormatter(pattern: pattern, delimiter: delimiter),
+  ],
+  validator: (value) {
+    final raw = (value ?? '').replaceAll(RegExp(RegExp.escape(delimiter)), '');
+    return ThaiIdCardNumbers().validate(raw) ? null : 'Invalid Thai ID card number';
+  },
+  decoration: const InputDecoration(hintText: '1-2345-67890-12-1'),
+)
+```
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
+Customize the pattern/delimiter as needed (e.g., `'.'`):
 
-class _MyAppState extends State<MyApp> {
-  final _thaiIdCardNumbers = ThaiIdCardNumbers();
-  final _formKey = GlobalKey<FormState>();
-  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
-  late TextEditingController _textEditingController;
+```dart
+ThaiIdCardNumbers().format('1234567890121', pattern: 'x.xxxx.xxxxx.xx.x', delimiter: '.');
+// => "1.2345.67890.12.1"
+```
 
-  @override
-  void initState() {
-    super.initState();
+## API
 
-    _textEditingController = TextEditingController();
-  }
+- `validate(String)`: Checks 13 digits (no delimiters) against checksum.
+- `validateFormatted(String)`: Accepts formatted input; auto-normalizes.
+- `format(String, {pattern, delimiter})`: Applies mask to digits.
+- `formatStrict(String, {pattern, delimiter})`: Like `format` but throws if length mismatches pattern slots.
+- `generate({int? firstDigit, bool formatted = false, String pattern, String delimiter})`: Creates a valid ID; optionally formatted and constrained by first digit.
+- `normalize(String)`: Removes all non-digits.
+- `checksum(String first12)`: Returns expected check digit for 12-digit prefix.
 
-  @override
-  void dispose() {
-    super.dispose();
-    _textEditingController.dispose();
-  }
+Checksum rule: sum of digit[i] × (13 − i) for i=0..11, then `(11 − (sum % 11)) % 10` equals the 13th digit.
 
-  @override
-  Widget build(BuildContext context) {
-    String pattern = "x-xxxx-xxxxx-xx-x";
-    String separator = "-";
+## Example app
 
-    return MaterialApp(
-      scaffoldMessengerKey: _messengerKey,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Thai ID Card Number Validator Demo'),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Text('Enter your Thai ID card numbers')),
-                TextFormField(
-                  controller: _textEditingController,
-                  validator: (String? value) {
-                    String? newValue = value?.replaceAll(RegExp('-'), '');
-                    if (!_thaiIdCardNumbers.validate(newValue!)) {
-                      return "$value is not a valid Thai ID card numbers.";
-                    }
-                    return null;
-                  },
-                  inputFormatters: [
-                    ThaiIdCardNumbersFormatter(
-                        pattern: pattern, delimiter: separator),
-                  ],
-                  decoration: const InputDecoration(
-                      hintText: "1-2345-67891-01-2",
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                          borderSide:
-                          BorderSide(width: 1, color: Colors.blueAccent))),
-                ),
-                const SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        _textEditingController.clear();
-                        _textEditingController.text = _thaiIdCardNumbers
-                            .format(_thaiIdCardNumbers.generate());
-                      },
-                      child: const Text("Generate"),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _messengerKey.currentState
-                              ?.showMaterialBanner(MaterialBanner(
-                            content: const Text(
-                              "Congratulations, Your Thai ID card numbers is in valid format.",
-                              style: TextStyle(
-                                color: Colors.green,
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    _messengerKey.currentState
-                                        ?.hideCurrentMaterialBanner();
-                                  },
-                                  child: const Text("DISMISS")),
-                            ],
-                          ));
-                        }
-                      },
-                      child: const Text("Validate"),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+A runnable demo is included under `example/`.
+
+- Run on web: `cd example && flutter run -d chrome`
+- Features: live validation indicator, generate button, clipboard copy of raw digits.
+
+## Screenshots
+
+Add media under `docs/` and reference them here:
+
+![Demo](docs/demo.gif)
+
+If images don’t render on pub.dev, open the GitHub README directly.
+
+## Documentation
+
+- Pub.dev package: https://pub.dev/packages/thai_id_card_numbers
+- Example app source: `example/lib/main.dart`
+- Recording guide: `docs/RECORDING.md`
+
+## Testing
+
+Run the package tests:
+
+```
+flutter test
 ```
 
 ## Inspiration
-This plugin is inspired by [thai-id-validator](https://www.npmjs.com/package/thai-id-validator).
 
+This package is inspired by [thai-id-validator](https://www.npmjs.com/package/thai-id-validator).
