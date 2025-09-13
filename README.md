@@ -10,7 +10,7 @@ Add the dependency in `pubspec.yaml` and fetch packages:
 
 ```yaml
 dependencies:
-  thai_id_card_numbers: ^1.3.0
+  thai_id_card_numbers: ^1.4.0
 ```
 
 ```
@@ -46,7 +46,10 @@ const delimiter = '-';
 
 TextFormField(
   keyboardType: TextInputType.number,
-  inputFormatters: [ThaiIdCardNumbersFormatter(pattern: pattern, delimiter: delimiter)],
+  inputFormatters: [
+    FilteringTextInputFormatter.digitsOnly,
+    ThaiIdCardNumbersFormatter(pattern: pattern, delimiter: delimiter),
+  ],
   validator: (value) {
     final raw = (value ?? '').replaceAll(RegExp(RegExp.escape(delimiter)), '');
     return ThaiIdCardNumbers().validate(raw) ? null : 'Invalid Thai ID card number';
@@ -61,6 +64,18 @@ Customize the pattern/delimiter as needed (e.g., `'.'`):
 ThaiIdCardNumbers().format('1234567890121', pattern: 'x.xxxx.xxxxx.xx.x', delimiter: '.');
 // => "1.2345.67890.12.1"
 ```
+
+## API
+
+- `validate(String)`: Checks 13 digits (no delimiters) against checksum.
+- `validateFormatted(String)`: Accepts formatted input; auto-normalizes.
+- `format(String, {pattern, delimiter})`: Applies mask to digits.
+- `formatStrict(String, {pattern, delimiter})`: Like `format` but throws if length mismatches pattern slots.
+- `generate({int? firstDigit, bool formatted = false, String pattern, String delimiter})`: Creates a valid ID; optionally formatted and constrained by first digit.
+- `normalize(String)`: Removes all non-digits.
+- `checksum(String first12)`: Returns expected check digit for 12-digit prefix.
+
+Checksum rule: sum of digit[i] × (13 − i) for i=0..11, then `(11 − (sum % 11)) % 10` equals the 13th digit.
 
 ## Example app
 
