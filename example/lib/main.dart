@@ -103,6 +103,7 @@ class _MyAppState extends State<MyApp> {
                         _isValid = _thaiId.validate(raw);
                       }),
                   inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
                     ThaiIdCardNumbersFormatter(pattern: _pattern, delimiter: _delimiter),
                   ],
                   decoration: const InputDecoration(

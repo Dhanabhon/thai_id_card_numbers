@@ -29,6 +29,11 @@ final id = ThaiIdCardNumbers();
 id.validate('1234567890121'); // true if checksum matches
 id.format('1234567890121');   // => "1-2345-67890-12-1"
 final generated = id.generate(); // valid 13-digit ID
+
+// Helpers
+id.validateFormatted('1-2345-67890-12-1'); // true (accepts delimiters)
+id.normalize('1-2345-67890-12-1'); // => "1234567890121"
+id.checksum('123456789012'); // => 1
 ```
 
 Use the input formatter in a Flutter `TextFormField`:
@@ -69,7 +74,6 @@ A runnable demo is included under `example/`.
 Add media under `docs/` and reference them here:
 
 ![Demo](docs/demo.gif)
-![Form](docs/screenshot.png)
 
 If images don’t render on pub.dev, open the GitHub README directly.
 
