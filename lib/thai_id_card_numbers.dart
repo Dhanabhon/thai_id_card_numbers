@@ -1,5 +1,13 @@
 import 'dart:math';
 
+import 'src/thai_id_extensions.dart';
+import 'src/thai_id_info.dart';
+import 'src/thai_id_validator.dart';
+
+export 'src/thai_id_extensions.dart';
+export 'src/thai_id_info.dart';
+export 'src/thai_id_validator.dart';
+
 class ThaiIdCardNumbers {
   // 13 digits only
   static final RegExp _thaiId13Digits = RegExp(r'^\d{13}$');
@@ -31,6 +39,9 @@ class ThaiIdCardNumbers {
 
   /// Validate a formatted Thai ID. Accepts any delimiters; digits are normalized.
   bool validateFormatted(String input) => validate(normalize(input));
+
+  /// Parse the ID to get metadata (Type, Office, Group, etc).
+  ThaiIdInfo extractInfo(String input) => ThaiIdInfo.parse(input);
 
   /// Generate 13 random digits (not guaranteed valid).
   String random() {
