@@ -5,6 +5,11 @@
 
 A powerful Flutter/Dart package for validating, formatting, and generating Thai ID card numbers. 
 Now features **Smart Input Formatter** for better UX and **Data Extraction** tools.
+<br>
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Thai ID Card Numbers Demo" width="300" />
+</p>
 
 ---
 
