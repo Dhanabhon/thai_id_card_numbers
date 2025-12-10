@@ -56,12 +56,13 @@ jobs:
     name: Publish to pub.dev
     needs: test
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest # Missing property added back!
     permissions:
       id-token: write 
     steps:
       - uses: actions/checkout@v4
       
-      # Critical for OIDC Auth: This action automatically configures pub credentials
+      # Critical for OIDC Auth
       - uses: dart-lang/setup-dart@v1
       
       - uses: subosito/flutter-action@v2
