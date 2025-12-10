@@ -3,10 +3,10 @@ name: CI/CD
 on:
   push:
     branches: [ "main" ]
-    tags: [ "v*" ] # Simplify tag pattern to catch any v... tag
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main", "develop" ]
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   test:
@@ -30,7 +30,7 @@ jobs:
   version-check:
     name: Check Version (On Main)
     needs: test
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,28 +46,19 @@ jobs:
           else
              REMOTE_VERSION=$(curl -s https://pub.dev/api/packages/$PACKAGE_NAME | grep -o '"latest":{"version":"[^"]*"' | cut -d'"' -f6)
              if [ "$LOCAL_VERSION" == "$REMOTE_VERSION" ]; then
-                echo "Version matches pub.dev. No need to recreate tag unless retrying."
+                echo "Version matches pub.dev."
              else
-                echo "Local version ($LOCAL_VERSION) > Remote ($REMOTE_VERSION)."
+                echo "Local ($LOCAL_VERSION) > Remote ($REMOTE_VERSION). Ready for release."
              fi
           fi
 
   publish:
     name: Publish to pub.dev
     needs: test
-    # Run if it's a tag push OR if manually triggered (workflow_dispatch)
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       id-token: write 
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Publish to pub.dev
-        run: dart pub publish -f
+    # Use the official reusable workflow from Dart team
+    # This handles OIDC token exchange automatically & correctly.
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    # Note: No 'steps' here because we are using 'uses'
