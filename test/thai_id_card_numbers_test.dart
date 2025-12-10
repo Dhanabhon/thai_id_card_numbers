@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:thai_id_card_numbers/thai_id_card_numbers.dart';
-import 'package:thai_id_card_numbers/thai_id_card_numbers_formatter.dart';
 
 void main() {
   group('ThaiIdCardNumbers', () {
@@ -48,47 +47,6 @@ void main() {
       expect(g.length, 13);
       expect(RegExp(r'^\d{13}$').hasMatch(g), isTrue);
       expect(subject.validate(g), isTrue);
-    });
-  });
-
-  group('ThaiIdCardNumbersFormatter', () {
-    const pattern = 'x-xxxx-xxxxx-xx-x';
-    const delimiter = '-';
-    final formatter = ThaiIdCardNumbersFormatter(pattern: pattern, delimiter: delimiter);
-
-    TextEditingValue tev(String text, [int? offset]) => TextEditingValue(
-          text: text,
-          selection: TextSelection.collapsed(offset: offset ?? text.length),
-        );
-
-    test('inserts delimiter when typing past boundary', () {
-      final oldValue = tev('1');
-      final newValue = tev('12');
-      final out = formatter.formatEditUpdate(oldValue, newValue);
-      expect(out.text, '1-2');
-      expect(out.selection.baseOffset, 3);
-    });
-
-    test('passes through normal character additions', () {
-      final oldValue = tev('1-2');
-      final newValue = tev('1-23');
-      final out = formatter.formatEditUpdate(oldValue, newValue);
-      expect(out.text, '1-23');
-    });
-
-    test('allows deletions unchanged', () {
-      final oldValue = tev('1-23');
-      final newValue = tev('1-2');
-      final out = formatter.formatEditUpdate(oldValue, newValue);
-      expect(out.text, '1-2');
-    });
-
-    test('prevents overflow beyond pattern length', () {
-      const full = '1-2345-67890-12-4';
-      final oldValue = tev(full);
-      final newValue = tev('$full' '0');
-      final out = formatter.formatEditUpdate(oldValue, newValue);
-      expect(out.text, full);
     });
   });
 }

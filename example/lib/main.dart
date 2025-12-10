@@ -21,11 +21,11 @@ class _MyAppState extends State<MyApp> {
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
   late final TextEditingController _controller;
 
-  // Demo pattern/delimiter used across formatter and formatting APIs
   static const String _pattern = 'x-xxxx-xxxxx-xx-x';
   static const String _delimiter = '-';
 
   bool _isValid = false;
+  ThaiIdInfo? _extractedInfo;
 
   @override
   void initState() {
@@ -39,11 +39,6 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  String _digitsOnly(String text) {
-    // Remove the configured delimiter to get raw 13-digit input
-    return text.replaceAll(RegExp(RegExp.escape(_delimiter)), '');
-  }
-
   void _showBanner(String message, {Color? color}) {
     _messengerKey.currentState?.hideCurrentMaterialBanner();
     _messengerKey.currentState?.showMaterialBanner(
@@ -54,7 +49,8 @@ class _MyAppState extends State<MyApp> {
         ),
         actions: [
           TextButton(
-            onPressed: () => _messengerKey.currentState?.hideCurrentMaterialBanner(),
+            onPressed: () =>
+                _messengerKey.currentState?.hideCurrentMaterialBanner(),
             child: const Text('DISMISS'),
           ),
         ],
@@ -62,111 +58,177 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  void _updateState() {
+    // CLEANER CODE: Use extension .isValidThaiIdFormatted
+    final isValid = _controller.text.isValidThaiIdFormatted;
+
+    // CLEANER CODE: Use extension .thaiIdInfo
+    final info = _controller.text.thaiIdInfo; // returns null if invalid length
+
+    setState(() {
+      _isValid = isValid;
+      _extractedInfo = info;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       scaffoldMessengerKey: _messengerKey,
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Thai ID Card Number Demo'),
+          title: const Text('Thai ID Card Number v1.5.0'),
+          centerTitle: true,
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12.0),
-                  child: Text('Enter your Thai ID card number'),
-                ),
-                TextFormField(
-                  controller: _controller,
-                  keyboardType: TextInputType.number,
-                  textInputAction: TextInputAction.done,
-                  maxLength: _pattern.length,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  validator: (String? value) {
-                    final raw = _digitsOnly(value ?? '');
-                    if (raw.isEmpty) {
-                      _isValid = false;
-                      return 'Please enter your Thai ID card number';
-                    }
-                    final ok = _thaiId.validate(raw);
-                    _isValid = ok;
-                    return ok ? null : 'Invalid Thai ID card number';
-                  },
-                  onChanged: (_) => setState(() {
-                        // trigger live validity indicator
-                        final raw = _digitsOnly(_controller.text);
-                        _isValid = _thaiId.validate(raw);
-                      }),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    ThaiIdCardNumbersFormatter(pattern: _pattern, delimiter: _delimiter),
-                  ],
-                  decoration: const InputDecoration(
-                    hintText: '1-2345-67890-12-1',
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 1, color: Colors.blueAccent),
-                    ),
-                    counterText: '',
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Scrollbar(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12.0),
+                        child: Text(
+                          'Enter your Thai ID card number',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _controller,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+
+                        // NEW: Use Ready-to-use Form Validator
+                        validator: ThaiIdValidator.validate(
+                          errorText: 'Invalid ID Format',
+                          allowEmpty: false,
+                        ),
+
+                        onChanged: (_) => _updateState(),
+
+                        // Support Enter key to submit
+                        onFieldSubmitted: (_) {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            _showBanner('Valid Thai ID!', color: Colors.green);
+                          } else {
+                            _showBanner('Invalid!', color: Colors.redAccent);
+                          }
+                        },
+
+                        // UPDATED: Use Smart Input Formatter
+                        inputFormatters: [
+                          ThaiIdCardNumbersFormatter(
+                              pattern: _pattern, delimiter: _delimiter),
+                        ],
+                        decoration: const InputDecoration(
+                          hintText: '1-2345-67890-12-1',
+                          border: OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(width: 1, color: Colors.blueAccent),
+                          ),
+                          counterText: '',
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Row(
+                        children: [
+                          Icon(
+                            _isValid ? Icons.check_circle : Icons.error_outline,
+                            color: _isValid ? Colors.green : Colors.redAccent,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _isValid ? 'Valid Format' : 'Invalid Format',
+                            style: TextStyle(
+                              color: _isValid ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16.0),
+
+                      // NEW: Show Extracted Info
+                      if (_extractedInfo != null) ...[
+                        Card(
+                          color: Colors.grey.shade100,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('📄 Extracted Info:',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                const Divider(),
+                                Text(
+                                    'Type: ${_extractedInfo!.typeDescription}'),
+                                Text(
+                                    'Office Code: ${_extractedInfo!.officeCode}'),
+                                Text('Group: ${_extractedInfo!.group}'),
+                                Text('Seq: ${_extractedInfo!.seq}'),
+                                Text(
+                                    'Check Digit: ${_extractedInfo!.checkDigit}'),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              // NEW: Generate formatted directly
+                              final generated =
+                                  _thaiId.generate(formatted: true);
+                              _controller.text = generated;
+                              _updateState();
+                            },
+                            icon: const Icon(Icons.autorenew),
+                            label: const Text('Generate'),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              if (_formKey.currentState?.validate() ?? false) {
+                                _showBanner('Valid Thai ID!',
+                                    color: Colors.green);
+                              } else {
+                                _showBanner('Invalid!',
+                                    color: Colors.redAccent);
+                              }
+                            },
+                            icon: const Icon(Icons.verified),
+                            label: const Text('Submit'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: () async {
+                              // CLEANER: Normalize extension
+                              final raw = _thaiId.normalize(_controller.text);
+                              await Clipboard.setData(ClipboardData(text: raw));
+                              _showBanner('Copied digits: $raw');
+                            },
+                            icon: const Icon(Icons.copy),
+                            label: const Text('Copy'),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8.0),
-                Row(
-                  children: [
-                    Icon(
-                      _isValid ? Icons.check_circle : Icons.error_outline,
-                      color: _isValid ? Colors.green : Colors.redAccent,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(_isValid ? 'Valid format' : 'Invalid format'),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        final generated = _thaiId.generate();
-                        _controller.text = _thaiId.format(
-                          generated,
-                          pattern: _pattern,
-                          delimiter: _delimiter,
-                        );
-                        setState(() => _isValid = true);
-                      },
-                      icon: const Icon(Icons.autorenew),
-                      label: const Text('Generate'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          _showBanner('Valid Thai ID card number', color: Colors.green);
-                        } else {
-                          _showBanner('Invalid Thai ID card number', color: Colors.redAccent);
-                        }
-                      },
-                      icon: const Icon(Icons.verified),
-                      label: const Text('Validate'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final raw = _digitsOnly(_controller.text);
-                        await Clipboard.setData(ClipboardData(text: raw));
-                        _showBanner('Copied raw digits to clipboard');
-                      },
-                      icon: const Icon(Icons.copy),
-                      label: const Text('Copy'),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
         ),

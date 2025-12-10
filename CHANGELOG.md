@@ -1,3 +1,12 @@
+## 1.5.0
+
+* **New Features**:
+  * Added `ThaiIdStringExtension` for easier usage (e.g., `'...'.isValidThaiId`, `'...'.thaiIdInfo`).
+  * Added `ThaiIdInfo` class for extracting metadata (type, office code, group, sequence) from an ID number.
+  * Added `ThaiIdValidator.validate()` for easy integration with Flutter's `TextFormField`.
+* **Improvements**:
+  * Enhanced `ThaiIdCardNumbersFormatter` with smarter cursor positioning logic for better UX.
+
 ## 1.4.0
 
 * Add helper APIs: `normalize`, `validateFormatted`, `checksum`.

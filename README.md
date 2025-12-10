@@ -1,111 +1,146 @@
-# thai_id_card_numbers
+# Thai ID Card Numbers
 
 [![pub package](https://img.shields.io/pub/v/thai_id_card_numbers)](https://pub.dev/packages/thai_id_card_numbers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Flutter/Dart package for validating and formatting Thai ID card numbers, including a TextInputFormatter for live masking as users type.
+A powerful Flutter/Dart package for validating, formatting, and generating Thai ID card numbers. 
+Now features **Smart Input Formatter** for better UX and **Data Extraction** tools.
 
-## Install
+---
 
-Add the dependency in `pubspec.yaml` and fetch packages:
+## Features
+
+- **Validation**: Verify 13-digit Thai ID checksums.
+- **Formatting**: Auto-format strings (e.g., `1-2345-67890-12-1`).
+- **Smart Input Formatter**: A `TextInputFormatter` for Flutter that handles cursor positioning intelligently as you type or edit.
+- **Extensions**: Clean and readable Dart extensions (e.g., `'...'.isValidThaiId`).
+- **Data Extraction**: Parse metadata like **Person Type**, **Office Code**, and **Group** from an ID.
+- **Form Validator**: Ready-to-use `FormFieldValidator` for `TextFormField`.
+
+## Installation
+
+Add the dependency in `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  thai_id_card_numbers: ^1.4.0
+  thai_id_card_numbers: ^1.5.0
 ```
 
-```
-flutter pub get
-```
+Run `flutter pub get` to install.
 
-## Quick start
+## Usage Guide
 
-Validate, format, and generate IDs in Dart code:
+### 1. Basic Validation & Formatting (Dart/Console)
 
 ```dart
 import 'package:thai_id_card_numbers/thai_id_card_numbers.dart';
 
 final id = ThaiIdCardNumbers();
 
-id.validate('1234567890121'); // true if checksum matches
-id.format('1234567890121');   // => "1-2345-67890-12-1"
-final generated = id.generate(); // valid 13-digit ID
+// Validate
+bool isValid = id.validate('1234567890121'); // true if checksum matches
 
-// Helpers
-id.validateFormatted('1-2345-67890-12-1'); // true (accepts delimiters)
-id.normalize('1-2345-67890-12-1'); // => "1234567890121"
-id.checksum('123456789012'); // => 1
+// Format
+String formatted = id.format('1234567890121'); // "1-2345-67890-12-1"
+
+// Generate random valid ID
+String generated = id.generate(formatted: true); 
 ```
 
-Use the input formatter in a Flutter `TextFormField`:
+### 2. String Extensions (Recommended)
+
+Write cleaner code using Dart extensions:
+
+```dart
+import 'package:thai_id_card_numbers/thai_id_card_numbers.dart';
+
+String raw = '1234567890121';
+
+if (raw.isValidThaiId) {
+  print('Passes Checksum!');
+}
+
+print(raw.formatAsThaiId()); // "1-2345-67890-12-1"
+```
+
+### 3. Flutter Form Integration
+
+#### Smart Input Formatter
+Use `ThaiIdCardNumbersFormatter` in your `TextField`. It automatically formats input and keeps the cursor in the right place even during editing.
 
 ```dart
 import 'package:thai_id_card_numbers/thai_id_card_numbers_formatter.dart';
 
-const pattern = 'x-xxxx-xxxxx-xx-x';
-const delimiter = '-';
-
 TextFormField(
   keyboardType: TextInputType.number,
   inputFormatters: [
-    FilteringTextInputFormatter.digitsOnly,
-    ThaiIdCardNumbersFormatter(pattern: pattern, delimiter: delimiter),
+    ThaiIdCardNumbersFormatter(delimiter: '-'), // Pattern defaults to x-xxxx-xxxxx-xx-x
   ],
-  validator: (value) {
-    final raw = (value ?? '').replaceAll(RegExp(RegExp.escape(delimiter)), '');
-    return ThaiIdCardNumbers().validate(raw) ? null : 'Invalid Thai ID card number';
-  },
-  decoration: const InputDecoration(hintText: '1-2345-67890-12-1'),
 )
 ```
 
-Customize the pattern/delimiter as needed (e.g., `'.'`):
+#### Form Validator
+Validate the field easily:
 
 ```dart
-ThaiIdCardNumbers().format('1234567890121', pattern: 'x.xxxx.xxxxx.xx.x', delimiter: '.');
-// => "1.2345.67890.12.1"
+TextFormField(
+  validator: ThaiIdValidator.validate(
+    errorText: 'Please enter a valid ID',
+    allowEmpty: false,
+  ),
+)
 ```
 
-## API
+### 4. Data Extraction (Metadata)
 
-- `validate(String)`: Checks 13 digits (no delimiters) against checksum.
-- `validateFormatted(String)`: Accepts formatted input; auto-normalizes.
-- `format(String, {pattern, delimiter})`: Applies mask to digits.
-- `formatStrict(String, {pattern, delimiter})`: Like `format` but throws if length mismatches pattern slots.
-- `generate({int? firstDigit, bool formatted = false, String pattern, String delimiter})`: Creates a valid ID; optionally formatted and constrained by first digit.
-- `normalize(String)`: Removes all non-digits.
-- `checksum(String first12)`: Returns expected check digit for 12-digit prefix.
+Extract hidden information from a valid Thai ID:
 
-Checksum rule: sum of digit[i] × (13 − i) for i=0..11, then `(11 − (sum % 11)) % 10` equals the 13th digit.
+```dart
+final info = '1-2345-67890-12-1'.thaiIdInfo;
 
-## Example app
-
-A runnable demo is included under `example/`.
-
-- Run on web: `cd example && flutter run -d chrome`
-- Features: live validation indicator, generate button, clipboard copy of raw digits.
-
-## Screenshots
-
-Add media under `docs/` and reference them here:
-
-![Demo](docs/demo.gif)
-
-If images don’t render on pub.dev, open the GitHub README directly.
-
-## Documentation
-
-- Pub.dev package: https://pub.dev/packages/thai_id_card_numbers
-- Example app source: `example/lib/main.dart`
-- Recording guide: `docs/RECORDING.md`
-
-## Testing
-
-Run the package tests:
-
+if (info != null) {
+  print('Type: ${info.typeDescription}'); // e.g., "Thai national: birth registered within..."
+  print('Province/District Code: ${info.officeCode}');
+  print('Group/Volume: ${info.group}');
+}
 ```
-flutter test
-```
+
+---
+
+## Contributing
+
+We welcome contributions! Whether it's reporting a bug, suggesting an enhancement, or submitting a Pull Request.
+
+### Development Setup
+
+1.  **Clone the repo**:
+    ```bash
+    git clone https://github.com/Dhanabhon/thai_id_card_numbers.git
+    ```
+2.  **Install dependencies**:
+    ```bash
+    flutter pub get
+    ```
+3.  **Run Tests**:
+    We have a comprehensive test suite in the `test/` directory, broken down by feature.
+    ```bash
+    flutter test
+    ```
+
+### Project Structure
+
+*   `lib/thai_id_card_numbers.dart`: Core logic validation/formatting.
+*   `lib/thai_id_card_numbers_formatter.dart`: Flutter input formatter logic.
+*   `lib/src/`: Internal implementation and helper classes (`Extensions`, `ThaiIdInfo`).
+*   `test/`: Unit tests corresponding to each feature.
+
+---
+
+## Links
+
+*   **Pub.dev**: [pub.dev/packages/thai_id_card_numbers](https://pub.dev/packages/thai_id_card_numbers)
+*   **Documentation**: [dartdocs](https://pub.dev/documentation/thai_id_card_numbers/latest/)
 
 ## Inspiration
 
-This package is inspired by [thai-id-validator](https://www.npmjs.com/package/thai-id-validator).
+Inspired by [thai-id-validator](https://www.npmjs.com/package/thai-id-validator).
