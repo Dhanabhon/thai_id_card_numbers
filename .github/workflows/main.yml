@@ -3,6 +3,7 @@ name: CI/CD
 on:
   push:
     branches: [ "main" ]
+    tags: [ "v[0-9]+.[0-9]+.[0-9]+*" ] # Trigger on tags like v1.5.0
   pull_request:
     branches: [ "main", "develop" ]
 
@@ -25,10 +26,38 @@ jobs:
       - name: Run tests
         run: flutter test
 
-  publish:
-    name: Publish to pub.dev
+  version-check:
+    name: Check Version (On Main)
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' # Only run on main branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for new version
+        run: |
+          PACKAGE_NAME=$(grep 'name:' pubspec.yaml | sed 's/name: //')
+          LOCAL_VERSION=$(grep 'version:' pubspec.yaml | sed 's/version: //')
+          
+          # Check pub.dev
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://pub.dev/api/packages/$PACKAGE_NAME)
+          
+          if [ "$HTTP_CODE" == "404" ]; then
+             echo "Package not found. Ready to publish first version: v$LOCAL_VERSION"
+          else
+             REMOTE_VERSION=$(curl -s https://pub.dev/api/packages/$PACKAGE_NAME | grep -o '"latest":{"version":"[^"]*"' | cut -d'"' -f6)
+             if [ "$LOCAL_VERSION" == "$REMOTE_VERSION" ]; then
+                echo "Version $LOCAL_VERSION matches pub.dev. No action needed."
+             else
+                echo "::notice title=New Version Detected::Version $LOCAL_VERSION is ready to publish! Run: git tag v$LOCAL_VERSION && git push origin v$LOCAL_VERSION"
+                echo "New version detected ($LOCAL_VERSION > $REMOTE_VERSION)."
+                echo "Please create and push a git tag 'v$LOCAL_VERSION' to trigger publishing."
+             fi
+          fi
+
+  publish:
+    name: Publish to pub.dev (On Tag)
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') # Only run on tags
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Required for authenticating with pub.dev OIDC
@@ -41,32 +70,5 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Check version availability and Publish
-        run: |
-          # 1. Extract version from pubspec.yaml
-          PACKAGE_NAME=$(grep 'name:' pubspec.yaml | sed 's/name: //')
-          LOCAL_VERSION=$(grep 'version:' pubspec.yaml | sed 's/version: //')
-          
-          echo "Package: $PACKAGE_NAME"
-          echo "Local Version: $LOCAL_VERSION"
-
-          # 2. Check latest version from pub.dev API
-          # We use curl to fetch package info. If package doesn't exist (404), we proceed to publish.
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://pub.dev/api/packages/$PACKAGE_NAME)
-          
-          if [ "$response" == "404" ]; then
-            echo "Package not found on pub.dev. Proceeding with first publish..."
-            dart pub publish -f
-          else
-            # Extract latest version from pub.dev
-            REMOTE_VERSION=$(curl -s https://pub.dev/api/packages/$PACKAGE_NAME | grep -o '"latest":{"version":"[^"]*"' | cut -d'"' -f6)
-            echo "Remote Version: $REMOTE_VERSION"
-            
-            if [ "$LOCAL_VERSION" == "$REMOTE_VERSION" ]; then
-              echo "Version $LOCAL_VERSION already exists on pub.dev. Skipping publish."
-              exit 0
-            else
-              echo "New version detected ($LOCAL_VERSION > $REMOTE_VERSION). Publishing..."
-              dart pub publish -f
-            fi
-          fi
+      - name: Publish to pub.dev
+        run: dart pub publish -f
