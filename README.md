@@ -2,6 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/thai_id_card_numbers)](https://pub.dev/packages/thai_id_card_numbers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI/CD](https://github.com/Dhanabhon/thai_id_card_numbers/actions/workflows/main.yml/badge.svg)](https://github.com/Dhanabhon/thai_id_card_numbers/actions/workflows/main.yml)
 
 A powerful Flutter/Dart package for validating, formatting, and generating Thai ID card numbers. 
 Now features **Smart Input Formatter** for better UX and **Data Extraction** tools.
