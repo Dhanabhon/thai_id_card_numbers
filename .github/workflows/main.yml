@@ -30,7 +30,7 @@ jobs:
   version-check:
     name: Check Version (On Main)
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,10 +55,21 @@ jobs:
   publish:
     name: Publish to pub.dev
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     permissions:
       id-token: write 
-    # Use the official reusable workflow from Dart team
-    # This handles OIDC token exchange automatically & correctly.
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
-    # Note: No 'steps' here because we are using 'uses'
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Critical for OIDC Auth: This action automatically configures pub credentials
+      - uses: dart-lang/setup-dart@v1
+      
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Publish to pub.dev
+        run: dart pub publish -f
