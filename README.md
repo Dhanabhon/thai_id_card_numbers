@@ -29,7 +29,7 @@ Add the dependency in `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  thai_id_card_numbers: ^1.5.0
+  thai_id_card_numbers: ^1.5.1
 ```
 
 Run `flutter pub get` to install.
