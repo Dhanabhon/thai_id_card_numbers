@@ -1,0 +1,72 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  test:
+    name: Test & Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+  publish:
+    name: Publish to pub.dev
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for authenticating with pub.dev OIDC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check version availability and Publish
+        run: |
+          # 1. Extract version from pubspec.yaml
+          PACKAGE_NAME=$(grep 'name:' pubspec.yaml | sed 's/name: //')
+          LOCAL_VERSION=$(grep 'version:' pubspec.yaml | sed 's/version: //')
+          
+          echo "Package: $PACKAGE_NAME"
+          echo "Local Version: $LOCAL_VERSION"
+
+          # 2. Check latest version from pub.dev API
+          # We use curl to fetch package info. If package doesn't exist (404), we proceed to publish.
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://pub.dev/api/packages/$PACKAGE_NAME)
+          
+          if [ "$response" == "404" ]; then
+            echo "Package not found on pub.dev. Proceeding with first publish..."
+            dart pub publish -f
+          else
+            # Extract latest version from pub.dev
+            REMOTE_VERSION=$(curl -s https://pub.dev/api/packages/$PACKAGE_NAME | grep -o '"latest":{"version":"[^"]*"' | cut -d'"' -f6)
+            echo "Remote Version: $REMOTE_VERSION"
+            
+            if [ "$LOCAL_VERSION" == "$REMOTE_VERSION" ]; then
+              echo "Version $LOCAL_VERSION already exists on pub.dev. Skipping publish."
+              exit 0
+            else
+              echo "New version detected ($LOCAL_VERSION > $REMOTE_VERSION). Publishing..."
+              dart pub publish -f
+            fi
+          fi
