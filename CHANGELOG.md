@@ -1,3 +1,8 @@
+## 1.5.1
+
+- Rename `docs` directory to `doc` to follow Dart package layout conventions.
+- Improve CI/CD workflow stability with tag-based publishing.
+
 ## 1.5.0
 
 * **New Features**:

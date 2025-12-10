@@ -9,7 +9,7 @@ Now features **Smart Input Formatter** for better UX and **Data Extraction** too
 <br>
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Thai ID Card Numbers Demo" width="300" />
+  <img src="doc/demo.gif" alt="Thai ID Card Numbers Demo" width="300" />
 </p>
 
 ---

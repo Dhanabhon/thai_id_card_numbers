@@ -1,7 +1,7 @@
 name: thai_id_card_numbers
 description: A comprehensive Flutter package for validating, formatting, and generating Thai ID card numbers. Includes smart input formatter, data extraction, and handy extensions.
 repository: https://github.com/Dhanabhon/thai_id_card_numbers
-version: 1.5.0
+version: 1.5.1
 homepage: https://dhanabhon.com
 topics:
  - thai-id-card-numbers
