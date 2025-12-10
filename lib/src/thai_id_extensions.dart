@@ -1,5 +1,4 @@
 import '../thai_id_card_numbers.dart';
-import 'thai_id_info.dart';
 
 /// Extension methods for [String] to easily validate and format Thai ID card numbers.
 extension ThaiIdStringExtension on String {

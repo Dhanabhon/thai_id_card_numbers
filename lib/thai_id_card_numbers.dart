@@ -1,8 +1,6 @@
 import 'dart:math';
 
-import 'src/thai_id_extensions.dart';
 import 'src/thai_id_info.dart';
-import 'src/thai_id_validator.dart';
 
 export 'src/thai_id_extensions.dart';
 export 'src/thai_id_info.dart';
