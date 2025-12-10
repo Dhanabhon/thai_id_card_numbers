@@ -3,9 +3,10 @@ name: CI/CD
 on:
   push:
     branches: [ "main" ]
-    tags: [ "v[0-9]+.[0-9]+.[0-9]+*" ] # Trigger on tags like v1.5.0
+    tags: [ "v*" ] # Simplify tag pattern to catch any v... tag
   pull_request:
     branches: [ "main", "develop" ]
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   test:
@@ -29,7 +30,7 @@ jobs:
   version-check:
     name: Check Version (On Main)
     needs: test
-    if: github.ref == 'refs/heads/main' # Only run on main branch
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +39,6 @@ jobs:
           PACKAGE_NAME=$(grep 'name:' pubspec.yaml | sed 's/name: //')
           LOCAL_VERSION=$(grep 'version:' pubspec.yaml | sed 's/version: //')
           
-          # Check pub.dev
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://pub.dev/api/packages/$PACKAGE_NAME)
           
           if [ "$HTTP_CODE" == "404" ]; then
@@ -46,21 +46,20 @@ jobs:
           else
              REMOTE_VERSION=$(curl -s https://pub.dev/api/packages/$PACKAGE_NAME | grep -o '"latest":{"version":"[^"]*"' | cut -d'"' -f6)
              if [ "$LOCAL_VERSION" == "$REMOTE_VERSION" ]; then
-                echo "Version $LOCAL_VERSION matches pub.dev. No action needed."
+                echo "Version matches pub.dev. No need to recreate tag unless retrying."
              else
-                echo "::notice title=New Version Detected::Version $LOCAL_VERSION is ready to publish! Run: git tag v$LOCAL_VERSION && git push origin v$LOCAL_VERSION"
-                echo "New version detected ($LOCAL_VERSION > $REMOTE_VERSION)."
-                echo "Please create and push a git tag 'v$LOCAL_VERSION' to trigger publishing."
+                echo "Local version ($LOCAL_VERSION) > Remote ($REMOTE_VERSION)."
              fi
           fi
 
   publish:
-    name: Publish to pub.dev (On Tag)
+    name: Publish to pub.dev
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v') # Only run on tags
+    # Run if it's a tag push OR if manually triggered (workflow_dispatch)
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
-      id-token: write # Required for authenticating with pub.dev OIDC
+      id-token: write 
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
